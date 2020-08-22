@@ -1,0 +1,33 @@
+micronaut:
+   application:
+   name: petTracker
+    
+
+   views:
+      freemarker:
+         #cache-storage: 'freemarker.cache.NullCacheStorage'
+         directory-for-template-loading: 'C:\\Users\\tjrag\\Desktop\\one-day-builds\\2020-07-10-pet-tracker\\projects\\pet-tracker\\src\\main\\views'
+         template-update-delay-milliseconds: 100
+      
+      
+    
+---
+datasources:
+   default:
+      url: ${JDBC_URL:`jdbc:h2:mem:default;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`}
+      username: ${JDBC_USER:sa}
+      password: ${JDBC_PASSWORD:""}
+      driverClassName: ${JDBC_DRIVER:org.h2.Driver}
+      
+---
+jpa:
+   default:
+      packages-to-scan:
+         - 'net.tmclean.pettracker.db' 
+      properties:
+         hibernate:
+            hbm2ddl:
+               auto: update
+            show_sql: true
+            current_session_context_class: 'thread'
+

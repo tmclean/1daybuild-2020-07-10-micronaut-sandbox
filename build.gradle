@@ -1,0 +1,132 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+plugins {
+    id "com.diffplug.eclipse.apt" version "3.22.0"
+    id "com.github.johnrengelman.shadow" version "6.0.0"
+    id "application"
+}
+
+version "0.1"
+group "net.tmclean.pet-tracker"
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+configurations {
+    // for dependencies that are needed for development only
+    developmentOnly
+}
+
+dependencies {
+    annotationProcessor(platform("io.micronaut:micronaut-bom:$micronautVersion"))
+    annotationProcessor("io.micronaut:micronaut-inject-java")
+    annotationProcessor("io.micronaut:micronaut-validation")
+    annotationProcessor("javax.persistence:javax.persistence-api:2.2")
+    annotationProcessor("io.micronaut.data:micronaut-data-processor")
+    
+    implementation(platform("io.micronaut:micronaut-bom:$micronautVersion"))
+    implementation("io.micronaut:micronaut-inject")
+    implementation("io.micronaut:micronaut-validation")
+    implementation("io.micronaut:micronaut-runtime")
+    implementation("javax.annotation:javax.annotation-api")
+    implementation("io.micronaut:micronaut-http-server-netty")
+    implementation("io.micronaut:micronaut-http-client")
+    implementation("io.micronaut.views:micronaut-views-freemarker")
+    
+    
+    implementation("io.micronaut.sql:micronaut-jdbc-hikari")
+    implementation("io.micronaut.sql:micronaut-hibernate-jpa")
+    implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
+    
+    runtimeOnly("ch.qos.logback:logback-classic")
+    runtimeOnly("com.h2database:h2")
+    
+    testAnnotationProcessor(platform("io.micronaut:micronaut-bom:$micronautVersion"))
+    testAnnotationProcessor("io.micronaut:micronaut-inject-java")
+    testImplementation(platform("io.micronaut:micronaut-bom:$micronautVersion"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("io.micronaut.test:micronaut-test-junit5")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+}
+
+test.classpath += configurations.developmentOnly
+
+mainClassName = "net.tmclean.pettracker.Application"
+
+// use JUnit 5 platform
+test {
+    useJUnitPlatform()
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion('11')
+    targetCompatibility = JavaVersion.toVersion('11')
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+    options.compilerArgs.addAll([
+        '-parameters',
+        // enables incremental compilation
+        '-Amicronaut.processing.incremental=true',
+        '-Amicronaut.processing.annotations=net.tmclean.pettracker.*',
+        "-Amicronaut.processing.group=$project.group",
+        "-Amicronaut.processing.module=$project.name",
+    ])
+}
+
+shadowJar {
+    mergeServiceFiles()
+}
+
+tasks.withType(JavaExec) {
+    classpath += configurations.developmentOnly
+    jvmArgs('-XX:TieredStopAtLevel=1', '-Dcom.sun.management.jmxremote', '-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000')
+    if (gradle.startParameter.continuous) {
+        systemProperties(
+            'micronaut.io.watch.restart':'true',
+            'micronaut.io.watch.enabled':'true',
+            "micronaut.io.watch.paths":"src/main"
+        )
+    }
+}
+
+tasks.withType(Test) {
+    testLogging {
+        // set options for log level LIFECYCLE
+        events TestLogEvent.FAILED,
+               TestLogEvent.PASSED,
+               TestLogEvent.SKIPPED,
+               TestLogEvent.STANDARD_OUT
+        exceptionFormat TestExceptionFormat.FULL
+        showExceptions true
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.STARTED,
+                   TestLogEvent.FAILED,
+                   TestLogEvent.PASSED,
+                   TestLogEvent.SKIPPED,
+                   TestLogEvent.STANDARD_ERROR,
+                   TestLogEvent.STANDARD_OUT
+            exceptionFormat TestExceptionFormat.FULL
+        }
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+                def startItem = '|  ', endItem = '  |'
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+            }
+        }
+    }
+}
+

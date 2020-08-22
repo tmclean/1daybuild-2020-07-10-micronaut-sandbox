@@ -1,0 +1,10 @@
+net.tmclean.pettracker.db.model.species.config.$SpeciesConfigToEventItemType$IntrospectionRef
+net.tmclean.pettracker.db.model.event.config.$EventTypeConfig$IntrospectionRef
+net.tmclean.pettracker.db.model.event.config.$SpeciesToEventTypeConfig$IntrospectionRef
+net.tmclean.pettracker.db.model.species.config.$SpeciesConfigToEventTypeConfig$IntrospectionRef
+net.tmclean.pettracker.db.model.species.config.$SpeciesConfig$IntrospectionRef
+net.tmclean.pettracker.db.model.species.$Species$IntrospectionRef
+net.tmclean.pettracker.db.model.$Pet$IntrospectionRef
+net.tmclean.pettracker.db.model.event.config.$EventToEventItemTypeConfig$IntrospectionRef
+net.tmclean.pettracker.db.model.event.config.$EventToEventItemConfig$IntrospectionRef
+net.tmclean.pettracker.db.model.species.config.$SpeciesToEventTypeConfig$IntrospectionRef
